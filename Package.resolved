@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Cleevio",
+        "repositoryURL": "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioFramework-ios.git",
+        "state": {
+          "branch": "feature/reworked-cleevio-framework-packages",
+          "revision": "9d12a52c6c8005020d66573e6c353595045f28d9",
+          "version": null
+        }
+      },
+      {
+        "package": "KeychainAccess",
+        "repositoryURL": "https://github.com/kishikawakatsumi/KeychainAccess.git",
+        "state": {
+          "branch": null,
+          "revision": "84e546727d66f1adc5439debad16270d0fdd04e7",
+          "version": "4.2.2"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
