@@ -16,6 +16,7 @@ open class KeychainStorage: StorageType {
     public func storage<T: Codable>(for key: String) -> StorageStream<T> {
         let stream = StorageStream<T>(currentValue: keychain.get(key: key, errorLogging: errorLogging))
         stream.publisher
+            .dropFirst()
             .sink { [keychain, errorLogging] value in keychain.store(value, for: key, errorLogging: errorLogging) }
             .store(in: cancelBag)
         return stream
