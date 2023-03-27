@@ -15,16 +15,20 @@ let package = Package(
         .library(name: "KeychainRepository", targets: ["KeychainRepository"])
     ],
     dependencies: [
-        .package(url: "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioFramework-ios.git", branch: "feature/reworked-cleevio-framework-packages"),
+        .package(url: "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git", .upToNextMajor(from: .init(1, 0, 0))),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
     ],
     targets: [
         .target(
             name: "CleevioStorage",
             dependencies: [
-                .product(name: "CleevioCore", package: "CleevioFramework-ios")
+                "CleevioCore"
             ]),
-        .target(name: "KeychainRepository", dependencies: ["CleevioCore", "CleevioStorage", "KeychainAccess"]),
+        .target(name: "KeychainRepository", dependencies: [
+            "CleevioCore",
+            "CleevioStorage",
+            "KeychainAccess"
+        ]),
         .testTarget(
             name: "CleevioStorageTests",
             dependencies: ["CleevioStorage"]),

@@ -2,12 +2,12 @@
   "object": {
     "pins": [
       {
-        "package": "Cleevio",
-        "repositoryURL": "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioFramework-ios.git",
+        "package": "CleevioCore",
+        "repositoryURL": "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git",
         "state": {
-          "branch": "feature/reworked-cleevio-framework-packages",
-          "revision": "9d12a52c6c8005020d66573e6c353595045f28d9",
-          "version": null
+          "branch": null,
+          "revision": "90da629abb47cee15699394272776960da2598cc",
+          "version": "1.0.0"
         }
       },
       {
