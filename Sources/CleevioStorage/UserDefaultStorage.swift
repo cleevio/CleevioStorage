@@ -19,6 +19,7 @@ open class UserDefaultsStorage: StorageType {
     public func storage<T: Codable>(for key: String) -> StorageStream<T> {
         let stream = StorageStream<T>(currentValue: store.get(key: key, errorLogging: errorLogging))
         stream.publisher
+            .dropFirst()
             .sink { [store] value in
                 store.store(value, for: key)
             }
