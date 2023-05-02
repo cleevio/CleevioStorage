@@ -1,6 +1,7 @@
 import Foundation
 import CleevioCore
 
+@available(macOS 10.15, *)
 open class UserDefaultsStorage: StorageType {
     enum StorageError: LocalizedError {
         case bundleNotFound

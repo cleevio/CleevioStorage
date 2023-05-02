@@ -1,5 +1,6 @@
 import Combine
 
+@available(macOS 10.15, *)
 open class StorageStream<Value>: StorageStreamType {
     public var publisher: AnyPublisher<Value?, Never> {
         currentValueSubject.eraseToAnyPublisher()
