@@ -3,6 +3,7 @@ import KeychainAccess
 import CleevioCore
 import CleevioStorage
 
+@available(macOS 10.15, *)
 open class KeychainStorage: StorageType {
     private let cancelBag = CancelBag()
     private let keychain: Keychain
