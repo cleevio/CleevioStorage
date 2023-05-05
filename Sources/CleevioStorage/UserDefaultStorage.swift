@@ -2,7 +2,7 @@ import Foundation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class UserDefaultsStorage: StorageType {
+open class UserDefaultsStorage: BaseStorage<String> {
     enum StorageError: LocalizedError {
         case bundleNotFound
     }
@@ -17,7 +17,7 @@ open class UserDefaultsStorage: StorageType {
         self.errorLogging = errorLogging
     }
     
-    public func storage<T: Codable>(for key: String) -> StorageStream<T> {
+    override public func storageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
         let stream = StorageStream<T>(currentValue: store.get(key: key, errorLogging: errorLogging))
         stream.publisher
             .dropFirst()
@@ -28,7 +28,9 @@ open class UserDefaultsStorage: StorageType {
         return stream
     }
 
-    public func clearAll() throws {
+    override public func clearAll() throws {
+        try super.clearAll()
+
         guard let domain = Bundle.main.bundleIdentifier else {
             throw StorageError.bundleNotFound
         }

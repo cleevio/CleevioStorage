@@ -4,7 +4,7 @@ import CleevioCore
 import CleevioStorage
 
 @available(macOS 10.15, *)
-open class KeychainStorage: StorageType {
+open class KeychainStorage: BaseStorage<String> {
     private let cancelBag = CancelBag()
     private let keychain: Keychain
     private let errorLogging: ErrorLogging?
@@ -14,7 +14,7 @@ open class KeychainStorage: StorageType {
         self.errorLogging = errorLogging
     }
     
-    public func storage<T: Codable>(for key: String) -> StorageStream<T> {
+    override public func storageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
         let stream = StorageStream<T>(currentValue: keychain.get(key: key, errorLogging: errorLogging))
         stream.publisher
             .dropFirst()
@@ -23,7 +23,8 @@ open class KeychainStorage: StorageType {
         return stream
     }
 
-    public func clearAll() throws {
+    override public func clearAll() throws {
+        try super.clearAll()
         try keychain.removeAll()
     }
 }
