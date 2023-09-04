@@ -8,7 +8,8 @@ public protocol StorageType<Key> {
     func clearAll() throws
 }
 
-extension StorageType {
+@available(macOS 10.15, *)
+public extension StorageType {
     func storage<T: Codable>(for key: Key) -> StorageStream<T> {
         storage(for: key, type: T.self)
     }

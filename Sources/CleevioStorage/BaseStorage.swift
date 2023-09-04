@@ -7,6 +7,7 @@
 
 import Foundation
 
+@available(macOS 10.15, *)
 open class BaseStorage<Key: Hashable>: StorageType {
     var storages: [Key: any StorageStreamType] = [:]
     private let lock = NSRecursiveLock()
