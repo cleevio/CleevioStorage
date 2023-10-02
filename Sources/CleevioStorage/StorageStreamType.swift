@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-public protocol StorageStreamType<Value> {
+public protocol StorageStreamType<Value>: AnyObject {
     associatedtype Value
     
     init(currentValue: Value?)
