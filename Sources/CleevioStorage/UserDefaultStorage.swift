@@ -2,7 +2,7 @@ import Foundation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class UserDefaultsStorage: BaseStorage<String> {
+open class UserDefaultsStorage: BaseStorage<String>, @unchecked Sendable {
     enum StorageError: LocalizedError {
         case bundleNotFound
     }

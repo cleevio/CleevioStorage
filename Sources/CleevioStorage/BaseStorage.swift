@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import CleevioCore
 
 @available(macOS 10.15, *)
-open class BaseStorage<Key: Hashable>: StorageType {
-    var storages: [Key: any StorageStreamType] = [:]
+open class BaseStorage<Key: Hashable>: StorageType, @unchecked Sendable {
+    var storages: [Key: WeakBox<AnyObject>] = [:]
     private let lock = NSRecursiveLock()
 
     public init() { }
@@ -21,12 +22,12 @@ open class BaseStorage<Key: Hashable>: StorageType {
             lock.unlock()
         }
 
-        if let storage = storages[key] as? StorageStream<T> {
+        if let storage = storages[key]?.unbox as? StorageStream<T> {
             return storage
         }
 
         let storage: StorageStream<T> = storageStream(for: key)
-        storages[key] = storage
+        storages[key] = .init(storage)
 
         return storage
     }
@@ -43,7 +44,7 @@ open class BaseStorage<Key: Hashable>: StorageType {
         }
 
         storages.forEach {
-            let store = $0.value as? StorageStream<Any>
+            let store = $0.value.unbox as? StorageStream<Any>
             store?.store(nil)
         }
     }

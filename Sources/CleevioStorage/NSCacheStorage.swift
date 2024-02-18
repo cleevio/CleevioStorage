@@ -9,7 +9,7 @@ import Foundation
 import CleevioCore
 
 /// A storage class that uses `NSCache` to efficiently manage and store objects associated with specific keys.
-open class NSCacheStorage<Key: Hashable>: BaseStorage<Key> {
+open class NSCacheStorage<Key: Hashable>: BaseStorage<Key>, @unchecked Sendable {
     /// The internal `NSCache` instance used for object storage.
     @usableFromInline
     let cache: NSCache<WrappedKey, AnyObject>
