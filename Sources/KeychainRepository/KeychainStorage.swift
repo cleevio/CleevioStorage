@@ -4,7 +4,7 @@ import CleevioCore
 import CleevioStorage
 
 @available(macOS 10.15, *)
-open class KeychainStorage: BaseStorage<String> {
+open class KeychainStorage: BaseStorage<String>, @unchecked Sendable {
     private let cancelBag = CancelBag()
     private let keychain: Keychain
     private let errorLogging: ErrorLogging?

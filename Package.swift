@@ -3,6 +3,15 @@
 
 import PackageDescription
 
+let swiftSettings: [SwiftSetting] = [
+// Only for development checks
+//    SwiftSetting.unsafeFlags([
+//        "-Xfrontend", "-strict-concurrency=complete",
+//        "-Xfrontend", "-warn-concurrency",
+//        "-Xfrontend", "-enable-actor-data-race-checks",
+//    ])
+]
+
 let package = Package(
     name: "CleevioStorageLibrary",
     platforms: [
@@ -23,14 +32,17 @@ let package = Package(
             name: "CleevioStorage",
             dependencies: [
                 "CleevioCore"
-            ]),
+            ],
+            swiftSettings: swiftSettings),
         .target(name: "KeychainRepository", dependencies: [
             "CleevioCore",
             "CleevioStorage",
             "KeychainAccess"
-        ]),
+        ],
+                swiftSettings: swiftSettings),
         .testTarget(
             name: "CleevioStorageTests",
-            dependencies: ["CleevioStorage"]),
+            dependencies: ["CleevioStorage"],
+            swiftSettings: swiftSettings),
     ]
 )
