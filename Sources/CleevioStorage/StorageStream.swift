@@ -7,7 +7,11 @@ open class StorageStream<Value>: StorageStreamType, @unchecked Sendable {
     }
 
     public var value: Value? {
-        currentValueSubject.value
+        get {
+            currentValueSubject.value
+        } set {
+            store(newValue)
+        }
     }
 
     private let currentValueSubject: CurrentValueSubject<Value?, Never>
