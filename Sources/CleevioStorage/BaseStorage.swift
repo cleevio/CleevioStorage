@@ -36,6 +36,29 @@ open class BaseStorage<Key: Hashable>: StorageType, @unchecked Sendable {
         fatalError("storageStream(for:, type:) has to be implemented")
     }
 
+    @available(iOS 17.0, *)
+    public final func observableStorage<T: Codable>(for key: Key, type: T.Type) -> ObservableStorageStream<T> {
+        lock.lock()
+
+        defer {
+            lock.unlock()
+        }
+
+        if let storage = storages[key]?.unbox as? ObservableStorageStream<T> {
+            return storage
+        }
+
+        let storage: ObservableStorageStream<T> = observableStorageStream(for: key)
+        storages[key] = .init(storage)
+
+        return storage
+    }
+
+    @available(iOS 17.0, *)
+    open func observableStorageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
+        fatalError("storageStream(for:, type:) has to be implemented")
+    }
+
     open func clearAll() throws {
         lock.lock()
 

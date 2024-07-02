@@ -28,6 +28,31 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
         return stream
     }
 
+    @available(iOS 17.0, *)
+    open override func observableStorageStream<T>(for key: String, type: T.Type = T.self) -> ObservableStorageStream<T> where T : Decodable, T : Encodable {
+        let stream = ObservableStorageStream<T>(currentValue: store.get(key: key, errorLogging: errorLogging))
+        Task {
+            let modelDidChange = AsyncStream {
+                await withCheckedContinuation { continuation in
+                    let _ = withObservationTracking {
+                        stream.value
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+            }
+            var iterator = modelDidChange.makeAsyncIterator()
+            repeat {
+                // On change is triggered for willSet of the value. Add a dispatch to get new value.
+                DispatchQueue.main.async { [store] in
+                    store.store(stream.value, for: key)
+                }
+
+            } while await iterator.next() != nil
+        }
+        return stream
+    }
+
     override public func clearAll() throws {
         try super.clearAll()
 
@@ -39,7 +64,7 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
     }
 }
 
-private extension UserDefaults {
+extension UserDefaults {
     func store<T: Codable>(_ value: T?, for key: String) {
         guard let value else {
             return removeObject(forKey: key)
@@ -61,3 +86,5 @@ private extension UserDefaults {
         }
     }
 }
+
+extension UserDefaults: @unchecked Sendable { }
