@@ -1,7 +1,8 @@
 import Combine
+import Observation
 
 @available(macOS 10.15, *)
-open class StorageStream<Value>: StorageStreamType, @unchecked Sendable {
+open class StorageStream<Value>: @unchecked Sendable {
     public var publisher: AnyPublisher<Value?, Never> {
         currentValueSubject.eraseToAnyPublisher()
     }
@@ -22,5 +23,16 @@ open class StorageStream<Value>: StorageStreamType, @unchecked Sendable {
 
     public func store(_ value: Value?) {
         currentValueSubject.send(value)
+    }
+}
+
+@available(iOS 17.0, *)
+@available(macOS 14.0, *)
+@Observable
+public class ObservableStorageStream<Value> {
+    public var value: Value?
+
+    required public init(currentValue: Value?) {
+        self.value = currentValue
     }
 }
