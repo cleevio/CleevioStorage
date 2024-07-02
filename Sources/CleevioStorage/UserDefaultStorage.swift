@@ -29,8 +29,8 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
     }
 
     @available(iOS 17.0, *)
-    open override func observableStorageStream<T>(for key: String, type: T.Type = T.self) -> ObservableStorageStream<T> where T : Decodable, T : Encodable {
-        let stream = ObservableStorageStream<T>(currentValue: store.get(key: key, errorLogging: errorLogging))
+    open override func observableStorageStream<T>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> where T : Decodable, T : Encodable {
+        let stream = ObservableStorageStream<T>(currentValue: store.get(key: key.keyValue, errorLogging: errorLogging))
         Task {
             let modelDidChange = AsyncStream {
                 await withCheckedContinuation { continuation in
@@ -44,8 +44,8 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
             var iterator = modelDidChange.makeAsyncIterator()
             repeat {
                 // On change is triggered for willSet of the value. Add a dispatch to get new value.
-                DispatchQueue.main.async { [store] in
-                    store.store(stream.value, for: key)
+                DispatchQueue.main.async { [weak self] in
+                    self?.store.store(stream.value, for: key.keyValue)
                 }
 
             } while await iterator.next() != nil
@@ -86,5 +86,3 @@ extension UserDefaults {
         }
     }
 }
-
-extension UserDefaults: @unchecked Sendable { }

@@ -29,6 +29,31 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
         return stream
     }
 
+    @available(iOS 17.0, *)
+    open override func observableStorageStream<T>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> where T : Decodable, T : Encodable {
+        let stream = ObservableStorageStream<T>(currentValue: fileManager.get(at: fileManager.cacheFile(for: key.keyValue, directory: directory), errorLogging: errorLogging))
+        Task {
+            let modelDidChange = AsyncStream {
+                await withCheckedContinuation { continuation in
+                    let _ = withObservationTracking {
+                        stream.value
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+            }
+            var iterator = modelDidChange.makeAsyncIterator()
+            repeat {
+                // On change is triggered for willSet of the value. Add a dispatch to get new value.
+                DispatchQueue.main.async { [fileManager, directory] in
+                    try? fileManager.store(stream.value, for: fileManager.cacheFile(for: key.keyValue, directory: directory))
+                }
+
+            } while await iterator.next() != nil
+        }
+        return stream
+    }
+
     open override func clearAll() throws {
         try super.clearAll()
         guard let folderURL = fileManager.urls(
