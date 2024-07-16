@@ -2,7 +2,7 @@ import Foundation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class UserDefaultsStorage: BaseStorage<String>, @unchecked Sendable {
+open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable where Key.KeyValue == String {
     enum StorageError: LocalizedError {
         case bundleNotFound
     }
@@ -18,11 +18,11 @@ open class UserDefaultsStorage: BaseStorage<String>, @unchecked Sendable {
     }
     
     override public func storageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
-        let stream = StorageStream<T>(currentValue: store.get(key: key, errorLogging: errorLogging))
+        let stream = StorageStream<T>(currentValue: store.get(key: key.keyValue, errorLogging: errorLogging))
         stream.publisher
             .dropFirst()
             .sink { [store] value in
-                store.store(value, for: key)
+                store.store(value, for: key.keyValue)
             }
             .store(in: cancelBag)
         return stream
