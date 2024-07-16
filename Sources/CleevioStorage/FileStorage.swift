@@ -35,7 +35,7 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
             for: .cachesDirectory,
             in: .userDomainMask
         ).first else { return }
-        for file in try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil) where file.pathExtension == "cache" {
+        for file in try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil) where file.pathExtension == "clcache" {
             try fileManager.removeItem(at: file)
         }
     }
@@ -48,7 +48,7 @@ private extension FileManager {
             in: .userDomainMask
         )
 
-        return folderURLs[0].appendingPathComponent(key + ".cache")
+        return folderURLs[0].appendingPathComponent(key + ".clcache")
     }
 }
 
