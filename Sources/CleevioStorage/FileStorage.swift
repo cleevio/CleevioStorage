@@ -14,7 +14,7 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
     private let directory: Directory
     private let errorLogging: ErrorLogging?
 
-    init(
+    public init(
         fileManager: FileManager = .default,
         directory: Directory = .cachesDirectory,
         errorLogging: ErrorLogging?
