@@ -13,7 +13,7 @@ import XCTest
 final class ObservableStorageTests: XCTestCase {
     static let storedKey = "test_key"
     let defaults = UserDefaults.standard
-    let storage = UserDefaultsStorage(errorLogging: nil)
+    let storage = UserDefaultsStorage<String>(errorLogging: nil)
     var observableStream: ObservableStorageStream<Int>?
 
     override func setUpWithError() throws {
@@ -51,5 +51,23 @@ final class ObservableStorageTests: XCTestCase {
         let observableStream2 = storage.observableStorage(for: Self.storedKey, type: Int.self)
         observableStream2.value = value
         XCTAssertEqual(observableStream?.value, value, "Streams should be synchronized")
+    }
+
+    func testObservableStorageStreamDataRace() async {
+        let storageStream = ObservableStorageStream(currentValue: ["ahoj":"nazdar"])
+
+        await withTaskGroup(of: Void.self) { group in
+            for number in 0..<1000 {
+                if number.isMultiple(of: 4) {
+                    group.addTask {
+                        print(storageStream.value?["test\(number-1)"])
+                    }
+                } else {
+                    group.addTask {
+                        storageStream.value?["test\(number)"] = UUID().uuidString
+                    }
+                }
+            }
+        }
     }
 }
