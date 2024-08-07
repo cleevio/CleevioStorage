@@ -44,10 +44,8 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
             }
             var iterator = modelDidChange.makeAsyncIterator()
             repeat {
-                // On change is triggered for willSet of the value. Add a dispatch to get new value.
-                DispatchQueue.main.async { [fileManager, directory] in
-                    try? fileManager.store(stream.value, for: fileManager.cacheFile(for: key.keyValue, directory: directory))
-                }
+                try await Task.sleep(nanoseconds: 10)
+                try? fileManager.store(stream.value, for: fileManager.cacheFile(for: key.keyValue, directory: directory))
 
             } while await iterator.next() != nil
         }

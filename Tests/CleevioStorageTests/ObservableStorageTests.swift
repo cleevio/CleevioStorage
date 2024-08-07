@@ -7,33 +7,75 @@
 
 import XCTest
 @testable import CleevioStorage
+import ConcurrencyExtras
+
+class UserDefaultsMock: UserDefaults {
+    let lock = NSLock()
+    private var dictionary: [String: Any?] = [:]
+
+    override func value(forKey key: String) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        return dictionary[key] as Any?
+    }
+
+    override func set(_ value: Any?, forKey defaultName: String) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        dictionary[defaultName] = value
+    }
+
+    func reset() {
+        lock.lock()
+        defer { lock.unlock() }
+        dictionary.removeAll()
+    }
+}
 
 @available(iOS 17.0, *)
 @Observable
 final class ObservableStorageTests: XCTestCase {
     static let storedKey = "test_key"
-    let defaults = UserDefaults.standard
-    let storage = UserDefaultsStorage<String>(errorLogging: nil)
-    var observableStream: ObservableStorageStream<Int>?
+    let defaults = UserDefaultsMock()
+    var storage: UserDefaultsStorage<String>!
+    var observableStream: ObservableStorageStream<Int>!
 
     override func setUpWithError() throws {
+        storage = .init(store: defaults, errorLogging: nil)
         observableStream = storage.observableStorage(for: Self.storedKey, type: Int.self)
     }
 
     override func tearDown() async throws {
-        let dictionary = defaults.dictionaryRepresentation()
-        dictionary.keys.forEach { key in
-            defaults.removeObject(forKey: key)
-        }
-        defaults.synchronize()
+        defaults.reset()
     }
-
+    
     func testValueStored() async throws {
-        let value = 10
-        observableStream?.value = value
-        try await Task.sleep(for: .seconds(1))
-        let storedValue: Int? = defaults.get(key: Self.storedKey, errorLogging: nil)
-        XCTAssertEqual(value, storedValue, "Stored value should be same as value")
+        let storageStream: ObservableStorageStream<Int?> = storage.observableStorageStream(for: Self.storedKey)
+        await Task.yield()
+        let expectation = expectation(description: "test")
+
+        Task.detached { [defaults] in
+            await Task.yield()
+            try await Task.sleep(nanoseconds: 10000)
+            await Task.yield()
+
+            let value = 10
+            storageStream.value = value
+            for _ in 0...Int.max {
+                await Task.yield()
+                try await Task.sleep(nanoseconds: 1000)
+                let storedValue: Int? = defaults.get(key: Self.storedKey, errorLogging: nil)
+                if value == storedValue {
+                    expectation.fulfill()
+                    break
+                }
+            }
+        }
+
+        await Task.yield()
+        await fulfillment(of: [expectation])
     }
 
     func testValueStoredLatestValue() async throws {

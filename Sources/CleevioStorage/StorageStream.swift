@@ -33,7 +33,7 @@ open class StorageStream<Value>: @unchecked Sendable {
 public class ObservableStorageStream<Value>: @unchecked Sendable {
     // Locking to prevent data race and achieve sendability
     @ObservationIgnored 
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
     private var storedValue: Value?
 
     public var value: Value? {

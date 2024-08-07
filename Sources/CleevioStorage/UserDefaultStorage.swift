@@ -8,6 +8,7 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
     }
 
     private let cancelBag = CancelBag()
+    private let readQueue = DispatchQueue(label: "user_default_storage_ququq", qos: .default)
 
     private let store: UserDefaults
     private let errorLogging: ErrorLogging?
@@ -31,24 +32,23 @@ open class UserDefaultsStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchec
     @available(iOS 17.0, *)
     open override func observableStorageStream<T>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> where T : Decodable, T : Encodable {
         let stream = ObservableStorageStream<T>(currentValue: store.get(key: key.keyValue, errorLogging: errorLogging))
-        Task {
-            let modelDidChange = AsyncStream {
-                await withCheckedContinuation { continuation in
-                    let _ = withObservationTracking {
-                        stream.value
-                    } onChange: {
-                        continuation.resume()
-                    }
+        let modelDidChange = AsyncStream {
+            await withCheckedContinuation { continuation in
+                let _ = withObservationTracking {
+                    let _ = stream.value
+                } onChange: {
+                    continuation.resume()
                 }
             }
-            var iterator = modelDidChange.makeAsyncIterator()
-            repeat {
-                // On change is triggered for willSet of the value. Add a dispatch to get new value.
-                DispatchQueue.main.async { [weak self] in
-                    self?.store.store(stream.value, for: key.keyValue)
-                }
+        }
 
-            } while await iterator.next() != nil
+        Task {
+            for await _ in modelDidChange {
+                Task.detached(priority: .userInitiated) { [store] in
+                    try await Task.sleep(nanoseconds: 10000000)
+                    store.store(stream.value, for: key.keyValue)
+                }
+            }
         }
         return stream
     }
