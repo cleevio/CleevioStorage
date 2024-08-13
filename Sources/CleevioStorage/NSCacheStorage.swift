@@ -9,7 +9,7 @@ import Foundation
 import CleevioCore
 
 /// A storage class that uses `NSCache` to efficiently manage and store objects associated with specific keys.
-open class NSCacheStorage<Key: Hashable>: BaseStorage<Key>, @unchecked Sendable {
+open class NSCacheStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable {
     /// The internal `NSCache` instance used for object storage.
     @usableFromInline
     let cache: NSCache<WrappedKey, AnyObject>
@@ -21,21 +21,19 @@ open class NSCacheStorage<Key: Hashable>: BaseStorage<Key>, @unchecked Sendable 
     ///
     /// - Parameter cache: An optional `NSCache` instance to use for storage. If not provided, a new one will be created.
     @inlinable
-    public init(cache: NSCache<WrappedKey, AnyObject> = .init()) {
+    public init(cache: NSCache<WrappedKey, AnyObject> = .init(), errorLogging: ErrorLogging? = nil) {
         self.cache = cache
+        super.init(errorLogging: errorLogging)
     }
-    
-    open override func storageStream<T>(for key: Key, type: T.Type = T.self) -> StorageStream<T> where T : Decodable, T : Encodable {
-        let stream = StorageStream<T>(currentValue: getObject(forKey: key))
-        stream.publisher
-            .dropFirst()
-            .sink { [weak self] value in
-                self?.setObject(WrappedValue(value: value), forKey: key)
-            }
-            .store(in: cancelBag)
-        return stream
+
+    open override func initialValue<T>(for key: Key) -> T? where T : Decodable, T : Encodable {
+        getObject(forKey: key)
     }
-    
+
+    open override func store<T>(value: T?, for key: Key) where T : Decodable, T : Encodable {
+        setObject(WrappedValue(value: value), forKey: key)
+    }
+
     open override func clearAll() throws {
         try super.clearAll()
         cache.removeAllObjects()

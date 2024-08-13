@@ -4,6 +4,10 @@ import Observation
 
 @available(macOS 10.15, *)
 open class StorageStream<Value>: @unchecked Sendable {
+    var onChange: ((Value?) -> Void)?
+
+    private let currentValueSubject: CurrentValueSubject<Value?, Never>
+
     public var publisher: AnyPublisher<Value?, Never> {
         currentValueSubject.eraseToAnyPublisher()
     }
@@ -13,10 +17,9 @@ open class StorageStream<Value>: @unchecked Sendable {
             currentValueSubject.value
         } set {
             store(newValue)
+            onChange?(newValue)
         }
     }
-
-    private let currentValueSubject: CurrentValueSubject<Value?, Never>
 
     required public init(currentValue: Value?) {
         self.currentValueSubject = CurrentValueSubject(currentValue)
@@ -31,6 +34,7 @@ open class StorageStream<Value>: @unchecked Sendable {
 @available(macOS 14.0, *)
 @Observable
 public class ObservableStorageStream<Value>: @unchecked Sendable {
+    var onChange: ((Value?) -> Void)?
     // Locking to prevent data race and achieve sendability
     @ObservationIgnored 
     private let lock = NSRecursiveLock()
@@ -45,6 +49,7 @@ public class ObservableStorageStream<Value>: @unchecked Sendable {
             lock.lock()
             storedValue = newValue
             lock.unlock()
+            onChange?(newValue)
         }
     }
 

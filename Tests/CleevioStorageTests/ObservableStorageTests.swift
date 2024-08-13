@@ -44,7 +44,7 @@ final class ObservableStorageTests: XCTestCase {
 
     override func setUpWithError() throws {
         storage = .init(store: defaults, errorLogging: nil)
-        observableStream = storage.observableStorage(for: Self.storedKey, type: Int.self)
+        observableStream = storage.observableStream(for: Self.storedKey, type: Int.self)
     }
 
     override func tearDown() async throws {
@@ -52,21 +52,15 @@ final class ObservableStorageTests: XCTestCase {
     }
     
     func testValueStored() async throws {
-        let storageStream: ObservableStorageStream<Int?> = storage.observableStorageStream(for: Self.storedKey)
+        let storageStream: ObservableStorageStream<Int?> = storage.observableStream(for: Self.storedKey)
         await Task.yield()
         let expectation = expectation(description: "test")
 
         Task.detached { [defaults] in
-            await Task.yield()
-            try await Task.sleep(nanoseconds: 10000)
-            await Task.yield()
-
             let value = 10
             storageStream.value = value
             for _ in 0...Int.max {
-                await Task.yield()
-                try await Task.sleep(nanoseconds: 1000)
-                let storedValue: Int? = defaults.get(key: Self.storedKey, errorLogging: nil)
+                let storedValue: Int? = try defaults.get(key: Self.storedKey)
                 if value == storedValue {
                     expectation.fulfill()
                     break
@@ -83,14 +77,13 @@ final class ObservableStorageTests: XCTestCase {
         observableStream?.value = 1
         observableStream?.value = 5
         observableStream?.value = value
-        try await Task.sleep(for: .seconds(1))
-        let storedValue: Int? = defaults.get(key: Self.storedKey, errorLogging: nil)
+        let storedValue: Int? = try defaults.get(key: Self.storedKey)
         XCTAssertEqual(value, storedValue, "Stored value should be same as value")
     }
 
     func testTwoStreamsUseSameValue() {
         let value = 5
-        let observableStream2 = storage.observableStorage(for: Self.storedKey, type: Int.self)
+        let observableStream2 = storage.observableStream(for: Self.storedKey, type: Int.self)
         observableStream2.value = value
         XCTAssertEqual(observableStream?.value, value, "Streams should be synchronized")
     }
@@ -102,7 +95,7 @@ final class ObservableStorageTests: XCTestCase {
             for number in 0..<1000 {
                 if number.isMultiple(of: 4) {
                     group.addTask {
-                        print(storageStream.value?["test\(number-1)"])
+                        print(storageStream.value?["test\(number-1)"] ?? "")
                     }
                 } else {
                     group.addTask {
