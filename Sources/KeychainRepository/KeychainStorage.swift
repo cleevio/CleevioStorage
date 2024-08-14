@@ -7,20 +7,18 @@ import CleevioStorage
 open class KeychainStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable where Key.KeyValue == String {
     private let cancelBag = CancelBag()
     private let keychain: Keychain
-    private let errorLogging: ErrorLogging?
 
     public init(keychain: Keychain, errorLogging: ErrorLogging?) {
         self.keychain = keychain
-        self.errorLogging = errorLogging
+        super.init(errorLogging: errorLogging)
     }
-    
-    override public func storageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
-        let stream = StorageStream<T>(currentValue: keychain.get(key: key.keyValue, errorLogging: errorLogging))
-        stream.publisher
-            .dropFirst()
-            .sink { [keychain, errorLogging] value in keychain.store(value, for: key.keyValue, errorLogging: errorLogging) }
-            .store(in: cancelBag)
-        return stream
+
+    open override func initialValue<T>(for key: Key) throws -> T? where T : Decodable, T : Encodable {
+        try keychain.get(key: key.keyValue)
+    }
+
+    open override func store<T>(value: T?, for key: Key) throws where T : Decodable, T : Encodable {
+        try keychain.store(value, for: key.keyValue)
     }
 
     override public func clearAll() throws {
@@ -30,31 +28,20 @@ open class KeychainStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked 
 }
 
 private extension Keychain {
-    func store<T: Codable>(_ value: T?, for key: String, errorLogging: ErrorLogging?) {
-        do {
-            guard let value else {
-                return try remove(key)
-            }
-            
-            let data = try JSONEncoder().encode(value)
-            try set(data, key: key)
-        } catch {
-            errorLogging?.log(error)
-            assertionFailure()
-            return
+    func store<T: Codable>(_ value: T?, for key: String) throws {
+        guard let value else {
+            return try remove(key)
         }
+
+        let data = try JSONEncoder().encode(value)
+        try set(data, key: key)
     }
 
-    func get<T: Codable>(key: String, of type: T.Type = T.self, errorLogging: ErrorLogging?) -> T? {
+    func get<T: Codable>(key: String, of type: T.Type = T.self) throws -> T? {
         guard let data = self[data: key] else {
             return nil
         }
-        do {
-            let object = try JSONDecoder().decode(T.self, from: data)
-            return object
-        } catch {
-            errorLogging?.log(error)
-            return nil
-        }
+        let object = try JSONDecoder().decode(T.self, from: data)
+        return object
     }
 }

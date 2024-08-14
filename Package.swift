@@ -1,4 +1,4 @@
-// swift-tools-version: 5.5
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -26,6 +26,7 @@ let package = Package(
     dependencies: [
         .package(url: "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git", .upToNextMajor(from: .init(2, 0, 0))),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
+        .package(url: "https://github.com/pointfreeco/swift-concurrency-extras", .upToNextMajor(from: .init(1, 1, 0)))
     ],
     targets: [
         .target(
@@ -42,7 +43,7 @@ let package = Package(
                 swiftSettings: swiftSettings),
         .testTarget(
             name: "CleevioStorageTests",
-            dependencies: ["CleevioStorage"],
+            dependencies: ["CleevioStorage", .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras")],
             swiftSettings: swiftSettings),
     ]
 )

@@ -1,25 +1,33 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "CleevioCore",
-        "repositoryURL": "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git",
-        "state": {
-          "branch": null,
-          "revision": "176a1ac517a001a3fc31a75f656bb8c1ed11e854",
-          "version": "2.0.0"
-        }
-      },
-      {
-        "package": "KeychainAccess",
-        "repositoryURL": "https://github.com/kishikawakatsumi/KeychainAccess.git",
-        "state": {
-          "branch": null,
-          "revision": "84e546727d66f1adc5439debad16270d0fdd04e7",
-          "version": "4.2.2"
-        }
+  "originHash" : "ee0b0ed717f7f5451d8ee7caf7053093287f296424cda0cbff85e424a192207a",
+  "pins" : [
+    {
+      "identity" : "cleeviocore",
+      "kind" : "remoteSourceControl",
+      "location" : "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git",
+      "state" : {
+        "revision" : "176a1ac517a001a3fc31a75f656bb8c1ed11e854",
+        "version" : "2.0.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "keychainaccess",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
+      "state" : {
+        "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
+        "version" : "4.2.2"
+      }
+    },
+    {
+      "identity" : "swift-concurrency-extras",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-concurrency-extras",
+      "state" : {
+        "revision" : "bb5059bde9022d69ac516803f4f227d8ac967f71",
+        "version" : "1.1.0"
+      }
+    }
+  ],
+  "version" : 3
 }

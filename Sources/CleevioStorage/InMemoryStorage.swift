@@ -8,28 +8,30 @@
 import Foundation
 import CleevioCore
 
-open class InMemoryStorage<Key: Hashable>: BaseStorage<Key>, @unchecked Sendable {
+open class InMemoryStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable {
     var storage: [Key: Any] = [:]
     private let lock = NSRecursiveLock()
     private let cancelBag = CancelBag()
 
-    open override func storageStream<T>(for key: Key, type: T.Type = T.self) -> StorageStream<T> where T : Decodable, T : Encodable {
-        let stream = StorageStream<T>(currentValue: storage[key] as? T)
-        stream.publisher
-            .dropFirst()
-            .sink { [weak self] value in
-                self?.lock.lock()
+    open override func initialValue<T>(for key: Key) throws -> T? where T : Decodable, T : Encodable {
+        lock.lock()
 
-                defer {
-                    self?.lock.unlock()
-                }
-                
-                self?.storage[key] = value
-            }
-            .store(in: cancelBag)
-        return stream
+        defer {
+            lock.unlock()
+        }
+        guard let value = storage[key] as? T? else { throw InMemoryStorageIncorrectTypeError() }
+        return value
     }
-    
+
+    open override func store<T>(value: T?, for key: Key) throws where T : Decodable, T : Encodable {
+        lock.lock()
+
+        defer {
+            lock.unlock()
+        }
+        storage[key] = value
+    }
+
     open override func clearAll() throws {
         lock.lock()
 
@@ -41,3 +43,5 @@ open class InMemoryStorage<Key: Hashable>: BaseStorage<Key>, @unchecked Sendable
         storage = [:]
     }
 }
+
+struct InMemoryStorageIncorrectTypeError: Error {}

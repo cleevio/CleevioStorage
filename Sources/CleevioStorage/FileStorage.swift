@@ -12,7 +12,6 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
 
     private let fileManager: FileManager
     private let directory: Directory
-    private let errorLogging: ErrorLogging?
 
     public init(
         fileManager: FileManager = .default,
@@ -21,12 +20,15 @@ open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyVal
     ) {
         self.fileManager = fileManager
         self.directory = directory
-        self.errorLogging = errorLogging
+        super.init(errorLogging: errorLogging)
     }
 
-    open override func storageStream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
-        let stream = StorageStream<T>(currentValue: fileManager.get(at: fileManager.cacheFile(for: key.keyValue, directory: directory), errorLogging: errorLogging))
-        return stream
+    open override func initialValue<T>(for key: Key) throws -> T? where T : Decodable, T : Encodable {
+        try fileManager.get(at: fileManager.cacheFile(for: key.keyValue, directory: directory))
+    }
+
+    open override func store<T>(value: T?, for key: Key) throws where T : Decodable, T : Encodable {
+        try fileManager.store(value, for: fileManager.cacheFile(for: key.keyValue, directory: directory))
     }
 
     open override func clearAll() throws {
@@ -63,16 +65,11 @@ extension FileManager {
         try data.write(to: url, options: .atomic)
     }
 
-    func get<T: Codable>(at url: URL, of type: T.Type = T.self, errorLogging: ErrorLogging?) -> T? {
+    func get<T: Codable>(at url: URL, of type: T.Type = T.self) throws -> T? {
         guard let data = try? Data(contentsOf: url) else {
             return nil
         }
-        do {
-            let object = try JSONDecoder().decode(T.self, from: data)
-            return object
-        } catch {
-            errorLogging?.log(error)
-            return nil
-        }
+        let object = try JSONDecoder().decode(T.self, from: data)
+        return object
     }
 }
