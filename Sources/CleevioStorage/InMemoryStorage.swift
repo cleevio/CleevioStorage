@@ -8,6 +8,7 @@
 import Foundation
 import CleevioCore
 
+@available(macOS 10.15, *)
 open class InMemoryStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable {
     var storage: [Key: Any] = [:]
     private let lock = NSRecursiveLock()
