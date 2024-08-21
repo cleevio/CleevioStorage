@@ -7,6 +7,7 @@ import CleevioCore
 
 public typealias Directory = FileManager.SearchPathDirectory
 
+@available(macOS 10.15, *)
 open class FileStorage<Key: KeyRepresentable>: BaseStorage<Key> where Key.KeyValue == String {
     private let cancelBag = CancelBag()
 

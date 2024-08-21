@@ -9,6 +9,7 @@ import Foundation
 import CleevioCore
 
 /// A storage class that uses `NSCache` to efficiently manage and store objects associated with specific keys.
+@available(macOS 10.15, *)
 open class NSCacheStorage<Key: KeyRepresentable>: BaseStorage<Key>, @unchecked Sendable {
     /// The internal `NSCache` instance used for object storage.
     @usableFromInline

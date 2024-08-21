@@ -17,7 +17,6 @@ open class StorageStream<Value>: @unchecked Sendable {
             currentValueSubject.value
         } set {
             store(newValue)
-            onChange?(newValue)
         }
     }
 
@@ -27,6 +26,7 @@ open class StorageStream<Value>: @unchecked Sendable {
 
     public func store(_ value: Value?) {
         currentValueSubject.send(value)
+        onChange?(value)
     }
 }
 
