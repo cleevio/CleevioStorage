@@ -15,7 +15,8 @@ let swiftSettings: [SwiftSetting] = [
 let package = Package(
     name: "CleevioStorageLibrary",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v13),
+        .watchOS(.v6)
     ],
     products: [
         .library(
@@ -24,7 +25,7 @@ let package = Package(
         .library(name: "KeychainRepository", targets: ["KeychainRepository"])
     ],
     dependencies: [
-        .package(url: "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git", .upToNextMajor(from: .init(2, 0, 0))),
+        .package(url: "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git", .upToNextMajor(from: .init(2, 1, 7))),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
         .package(url: "https://github.com/pointfreeco/swift-concurrency-extras", .upToNextMajor(from: .init(1, 1, 0)))
     ],
