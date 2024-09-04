@@ -39,7 +39,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         return storage
     }
 
-    @available(iOS 17.0, macOS 14.0, *)
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
     public final func observableStream<T: Codable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
         lock.lock()
 

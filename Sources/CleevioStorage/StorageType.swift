@@ -5,7 +5,7 @@ public protocol StorageType<Key> {
     associatedtype Key
 
     func stream<T: Codable>(for key: Key, type: T.Type) -> StorageStream<T>
-    @available(iOS 17.0, macOS 14.0, *)
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
     func observableStream<T: Codable>(for key: Key, type: T.Type) -> ObservableStorageStream<T>
     func clearAll() throws
 }
@@ -16,7 +16,7 @@ public extension StorageType {
         stream(for: key, type: T.self)
     }
 
-    @available(iOS 17.0, macOS 14.0, *)
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
     func observableStorage<T: Codable>(for key: Key) -> ObservableStorageStream<T> {
         observableStream(for: key, type: T.self)
     }

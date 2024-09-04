@@ -1,3 +1,4 @@
+
 import Combine
 import Foundation
 import Observation
@@ -30,6 +31,7 @@ open class StorageStream<Value>: @unchecked Sendable {
     }
 }
 
+@available(watchOS 10.0, *)
 @available(iOS 17.0, *)
 @available(macOS 14.0, *)
 @Observable
