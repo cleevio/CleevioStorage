@@ -1,10 +1,10 @@
 {
-  "originHash" : "25ff82c37f645f2c42df15aa9a59679d03518e9f2ec3b0858edf16504f8b18a5",
+  "originHash" : "c363ee6ef8d42aa78193eb96c78dad95089cdedc561bcd9ec34e35706ff74e78",
   "pins" : [
     {
       "identity" : "cleeviocore",
       "kind" : "remoteSourceControl",
-      "location" : "git@gitlab.cleevio.cz:cleevio-dev-ios/CleevioCore.git",
+      "location" : "https://github.com/cleevio/CleevioCore.git",
       "state" : {
         "revision" : "593b5d1011ad0aa6963ea2d8bf2ddc5e59caa917",
         "version" : "2.1.7"

@@ -2,15 +2,19 @@
 import Combine
 import Foundation
 import Observation
+import CleevioCore
 
 @available(macOS 10.15, *)
 open class StorageStream<Value>: @unchecked Sendable {
     var onChange: ((Value?) -> Void)?
 
+    public private(set) lazy var id = ObjectIdentifier(self)
     private let currentValueSubject: CurrentValueSubject<Value?, Never>
 
     public var publisher: AnyPublisher<Value?, Never> {
-        currentValueSubject.eraseToAnyPublisher()
+        let publisher = currentValueSubject.eraseToAnyPublisher()
+        setAssociatedObject(base: self, key: &id, value: self)
+        return publisher
     }
 
     public var value: Value? {
@@ -28,6 +32,19 @@ open class StorageStream<Value>: @unchecked Sendable {
     public func store(_ value: Value?) {
         currentValueSubject.send(value)
         onChange?(value)
+    }
+}
+
+extension StorageStream: Identifiable { }
+extension StorageStream: Equatable {
+    public static func == (lhs: StorageStream<Value>, rhs: StorageStream<Value>) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension StorageStream: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
