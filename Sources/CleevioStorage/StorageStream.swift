@@ -8,20 +8,23 @@ import CleevioCore
 public final class StorageStream<Value: Sendable>: Sendable {
     private let onChange: (@Sendable (Value?) -> Void)?
     nonisolated private let currentValueSubject: CurrentValueSubject<Value?, Never>
+    private let lock = NSRecursiveLock()
+    nonisolated(unsafe) private var storedValue: Value?
 
+    public var value: Value? {
+        get {
+            defer { lock.unlock() }
+            lock.lock()
+            return storedValue
+        } set {
+            store(newValue)
+        }
+    }
     public var publisher: AnyPublisher<Value?, Never> {
         var id = ObjectIdentifier(self)
         let publisher = currentValueSubject.eraseToAnyPublisher()
         setAssociatedObject(base: self, key: &id, value: self)
         return publisher
-    }
-
-    public var value: Value? {
-        get {
-            currentValueSubject.value
-        } set {
-            store(newValue)
-        }
     }
 
     required nonisolated public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
@@ -30,9 +33,13 @@ public final class StorageStream<Value: Sendable>: Sendable {
     }
 
     nonisolated public func store(_ value: Value?) {
-        DispatchQueue.main.sync { [currentValueSubject] in // TODO: Check why this is needed
+        defer { lock.unlock() }
+        lock.lock()
+
+        DispatchQueue.main.async { [currentValueSubject] in // TODO: Check why this is needed
             currentValueSubject.send(value)
         }
+        storedValue = value
         onChange?(value)
     }
 }
