@@ -29,6 +29,7 @@ public final class StorageStream<Value: Sendable>: Sendable {
 
     required nonisolated public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
         self.currentValueSubject = CurrentValueSubject(currentValue)
+        self.storedValue = currentValue
         self.onChange = onChange
     }
 
