@@ -1,11 +1,11 @@
 
-import Combine
+@preconcurrency import Combine
 import Foundation
 import Observation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class StorageStream<Value>: @unchecked Sendable {
+open class StorageStream<Value: Sendable>: @unchecked Sendable {
     var onChange: (@Sendable (Value?) -> Void)?
 
     public private(set) lazy var id = ObjectIdentifier(self)
@@ -53,7 +53,7 @@ extension StorageStream: Hashable {
 @available(iOS 17.0, *)
 @available(macOS 14.0, *)
 @Observable
-public class ObservableStorageStream<Value>: @unchecked Sendable {
+public class ObservableStorageStream<Value: Sendable>: @unchecked Sendable {
     @ObservationIgnored
     let onChange: (@Sendable (Value?) -> Void)?
     // Locking to prevent data race and achieve sendability

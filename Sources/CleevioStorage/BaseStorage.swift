@@ -18,7 +18,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         self.errorLogging = errorLogging
     }
 
-    public final func stream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
+    public final func stream<T: Codable & Sendable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
         lock.lock()
 
         defer {
@@ -40,7 +40,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
     }
 
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
-    public final func observableStream<T: Codable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
+    public final func observableStream<T: Codable & Sendable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
         lock.lock()
 
         defer {
@@ -60,15 +60,15 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         return storage
     }
 
-    open func initialValue<T: Codable>(for key: Key) throws -> T? {
+    open func initialValue<T: Codable & Sendable>(for key: Key) throws -> T? {
         fatalError("initialValue(for:) has to be implemented")
     }
 
-    open func store<T: Codable>(value: T?, for key: Key) throws {
+    open func store<T: Codable & Sendable>(value: T?, for key: Key) throws {
         fatalError("store(for:type:) has to be implemented")
     }
 
-    private func _initialValue<T: Codable>(for key: Key) -> T? {
+    private func _initialValue<T: Codable & Sendable>(for key: Key) -> T? {
         do {
             return try initialValue(for: key)
         } catch {
@@ -77,7 +77,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         }
     }
 
-    private func _store<T: Codable>(value: T?, for key: Key) {
+    private func _store<T: Codable & Sendable>(value: T?, for key: Key) {
         do {
             try store(value: value, for: key)
         } catch {
@@ -93,7 +93,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         }
 
         storages.forEach {
-            let store = $0.value.unbox as? StorageStream<Any>
+            let store = $0.value.unbox as? StorageStream<Sendable>
             store?.store(nil)
         }
     }
