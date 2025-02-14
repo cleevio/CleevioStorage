@@ -30,7 +30,9 @@ public final class StorageStream<Value: Sendable>: Sendable {
     }
 
     nonisolated public func store(_ value: Value?) {
-        currentValueSubject.send(value)
+        DispatchQueue.main.async { [currentValueSubject] in // TODO: Check why this is needed
+            currentValueSubject.send(value)
+        }
         onChange?(value)
     }
 }
