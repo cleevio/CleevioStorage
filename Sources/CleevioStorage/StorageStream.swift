@@ -25,7 +25,7 @@ open class StorageStream<Value>: @unchecked Sendable {
         }
     }
 
-    required public init(currentValue: Value?, onChange: (@escaping @Sendable (Value?) -> Void)) {
+    required public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
         self.currentValueSubject = CurrentValueSubject(currentValue)
         self.onChange = onChange
     }
@@ -55,7 +55,7 @@ extension StorageStream: Hashable {
 @Observable
 public class ObservableStorageStream<Value>: @unchecked Sendable {
     @ObservationIgnored
-    let onChange: (@Sendable (Value?) -> Void)
+    let onChange: (@Sendable (Value?) -> Void)?
     // Locking to prevent data race and achieve sendability
     @ObservationIgnored 
     private let lock = NSRecursiveLock()
@@ -70,11 +70,11 @@ public class ObservableStorageStream<Value>: @unchecked Sendable {
             lock.lock()
             storedValue = newValue
             lock.unlock()
-            onChange(newValue)
+            onChange?(newValue)
         }
     }
 
-    required public init(currentValue: Value?, onChange: (@escaping @Sendable (Value?) -> Void)) {
+    required public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
         self.onChange = onChange
         self.storedValue = currentValue
     }
