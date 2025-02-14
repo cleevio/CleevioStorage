@@ -5,13 +5,12 @@ import Observation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class StorageStream<Value: Sendable>: @unchecked Sendable {
-    var onChange: (@Sendable (Value?) -> Void)?
-
-    public private(set) lazy var id = ObjectIdentifier(self)
-    private let currentValueSubject: CurrentValueSubject<Value?, Never>
+public final class StorageStream<Value: Sendable>: Sendable {
+    private let onChange: (@Sendable (Value?) -> Void)?
+    nonisolated private let currentValueSubject: CurrentValueSubject<Value?, Never>
 
     public var publisher: AnyPublisher<Value?, Never> {
+        var id = ObjectIdentifier(self)
         let publisher = currentValueSubject.eraseToAnyPublisher()
         setAssociatedObject(base: self, key: &id, value: self)
         return publisher
@@ -25,12 +24,12 @@ open class StorageStream<Value: Sendable>: @unchecked Sendable {
         }
     }
 
-    required public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
+    required nonisolated public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
         self.currentValueSubject = CurrentValueSubject(currentValue)
         self.onChange = onChange
     }
 
-    public func store(_ value: Value?) {
+    nonisolated public func store(_ value: Value?) {
         currentValueSubject.send(value)
         onChange?(value)
     }
