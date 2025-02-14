@@ -4,6 +4,8 @@ import Foundation
 import Observation
 import CleevioCore
 
+private let storageQueue = DispatchQueue(label: "storagequeue")
+
 @available(macOS 10.15, *)
 public final class StorageStream<Value: Sendable>: Sendable {
     private let onChange: (@Sendable (Value?) -> Void)?
@@ -30,7 +32,7 @@ public final class StorageStream<Value: Sendable>: Sendable {
     }
 
     nonisolated public func store(_ value: Value?) {
-        DispatchQueue.main.async { [currentValueSubject] in // TODO: Check why this is needed
+        storageQueue.sync { [currentValueSubject] in // TODO: Check why this is needed
             currentValueSubject.send(value)
         }
         onChange?(value)
