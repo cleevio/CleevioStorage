@@ -11,7 +11,7 @@ import CleevioCore
 @available(macOS 10.15, *)
 open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable {
     public let errorLogging: ErrorLogging?
-    var storages: [Key: WeakBox<AnyObject>] = [:]
+    nonisolated(unsafe) private var storages: [Key: WeakBox<AnyObject>] = [:]
     private let lock = NSRecursiveLock()
 
     public init(errorLogging: ErrorLogging?) {
@@ -29,10 +29,10 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
             return storage
         }
 
-        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key))
-        storage.onChange = { [weak self] in
+        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key)) { [weak self] in
             self?._store(value: $0, for: key)
         }
+
         storages[key] = .init(storage)
 
 
@@ -51,10 +51,10 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
             return storage
         }
 
-        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key))
-        storage.onChange = { [weak self] in
+        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key)) { [weak self] in
             self?._store(value: $0, for: key)
         }
+
         storages[key] = .init(storage)
 
         return storage

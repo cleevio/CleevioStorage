@@ -4,7 +4,7 @@
 
 import Foundation
 
-public protocol KeyRepresentable: Hashable {
+public protocol KeyRepresentable: Hashable, Sendable {
     associatedtype KeyValue
     // This has to be named differently then rawValue otherwise there is as issue within compile time with RawValue protocol.
     var keyValue: KeyValue { get }

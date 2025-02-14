@@ -6,7 +6,7 @@ import CleevioCore
 
 @available(macOS 10.15, *)
 open class StorageStream<Value>: @unchecked Sendable {
-    var onChange: ((Value?) -> Void)?
+    var onChange: (@Sendable (Value?) -> Void)?
 
     public private(set) lazy var id = ObjectIdentifier(self)
     private let currentValueSubject: CurrentValueSubject<Value?, Never>
@@ -25,8 +25,9 @@ open class StorageStream<Value>: @unchecked Sendable {
         }
     }
 
-    required public init(currentValue: Value?) {
+    required public init(currentValue: Value?, onChange: (@escaping @Sendable (Value?) -> Void)) {
         self.currentValueSubject = CurrentValueSubject(currentValue)
+        self.onChange = onChange
     }
 
     public func store(_ value: Value?) {
@@ -53,7 +54,8 @@ extension StorageStream: Hashable {
 @available(macOS 14.0, *)
 @Observable
 public class ObservableStorageStream<Value>: @unchecked Sendable {
-    var onChange: ((Value?) -> Void)?
+    @ObservationIgnored
+    let onChange: (@Sendable (Value?) -> Void)
     // Locking to prevent data race and achieve sendability
     @ObservationIgnored 
     private let lock = NSRecursiveLock()
@@ -68,11 +70,12 @@ public class ObservableStorageStream<Value>: @unchecked Sendable {
             lock.lock()
             storedValue = newValue
             lock.unlock()
-            onChange?(newValue)
+            onChange(newValue)
         }
     }
 
-    required public init(currentValue: Value?) {
-        self.value = currentValue
+    required public init(currentValue: Value?, onChange: (@escaping @Sendable (Value?) -> Void)) {
+        self.onChange = onChange
+        self.storedValue = currentValue
     }
 }
