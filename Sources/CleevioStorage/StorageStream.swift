@@ -4,8 +4,6 @@ import Foundation
 import Observation
 import CleevioCore
 
-fileprivate let queue = DispatchQueue(label: "StorageStreamPublisher")
-
 @available(macOS 10.15, *)
 public final class StorageStream<Value: Sendable>: Sendable {
     private let onChange: (@Sendable (Value?) -> Void)?
@@ -28,13 +26,11 @@ public final class StorageStream<Value: Sendable>: Sendable {
         defer { lock.unlock() }
         lock.lock()
 
-        var valueSubjet = self.valueSubject
+        nonisolated(unsafe) var valueSubject = self.valueSubject
 
         if self.valueSubject == nil {
-            queue.sync {
-                valueSubjet = .init()
-                self.valueSubject = valueSubjet
-            }
+            valueSubject = .init()
+            self.valueSubject = valueSubject
         }
 
         let publisher = Publishers.Merge(Just(storedValue).eraseToAnyPublisher(), valueSubject!.eraseToAnyPublisher()).eraseToAnyPublisher()
@@ -51,7 +47,7 @@ public final class StorageStream<Value: Sendable>: Sendable {
         defer { lock.unlock() }
         lock.lock()
 
-        queue.async { [valueSubject] in
+        DispatchQueue.main.async { [valueSubject] in
             valueSubject?.send(value)
         }
         storedValue = value
