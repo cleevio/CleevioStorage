@@ -51,7 +51,9 @@ public final class StorageStream<Value: Sendable>: Sendable {
         defer { lock.unlock() }
         lock.lock()
 
-        valueSubject?.send(value)
+        queue.async { [valueSubject] in
+            valueSubject?.send(value)
+        }
         storedValue = value
         onChange?(value)
     }
