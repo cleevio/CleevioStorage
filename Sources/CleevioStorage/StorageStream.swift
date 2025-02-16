@@ -7,9 +7,10 @@ import CleevioCore
 @available(macOS 10.15, *)
 public final class StorageStream<Value: Sendable>: Sendable {
     private let onChange: (@Sendable (Value?) -> Void)?
-    nonisolated private let currentValueSubject: CurrentValueSubject<Value?, Never>
+    nonisolated(unsafe) private weak var valueSubject: PassthroughSubject<Value?, Never>?
     private let lock = NSRecursiveLock()
     nonisolated(unsafe) private var storedValue: Value?
+    nonisolated(unsafe) private(set) var associatedObjectID = UUID()
 
     public var value: Value? {
         get {
@@ -20,15 +21,23 @@ public final class StorageStream<Value: Sendable>: Sendable {
             store(newValue)
         }
     }
+
     public var publisher: AnyPublisher<Value?, Never> {
-        var id = ObjectIdentifier(self)
-        let publisher = currentValueSubject.eraseToAnyPublisher()
-        setAssociatedObject(base: self, key: &id, value: self)
+        defer { lock.unlock() }
+        lock.lock()
+
+        let valueSubject = valueSubject ?? .init()
+
+        if self.valueSubject == nil {
+            self.valueSubject = valueSubject
+        }
+
+        let publisher = Publishers.Merge(Just(storedValue).eraseToAnyPublisher(), valueSubject.eraseToAnyPublisher()).eraseToAnyPublisher()
+        setAssociatedObject(base: valueSubject, key: &associatedObjectID, value: self)
         return publisher
     }
 
     required nonisolated public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
-        self.currentValueSubject = CurrentValueSubject(currentValue)
         self.storedValue = currentValue
         self.onChange = onChange
     }
@@ -37,9 +46,7 @@ public final class StorageStream<Value: Sendable>: Sendable {
         defer { lock.unlock() }
         lock.lock()
 
-        DispatchQueue.main.async { [currentValueSubject] in // TODO: Check why this is needed
-            currentValueSubject.send(value)
-        }
+        valueSubject?.send(value)
         storedValue = value
         onChange?(value)
     }
