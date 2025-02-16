@@ -18,7 +18,17 @@ public final class StorageStream<Value: Sendable>: Sendable {
             lock.lock()
             return storedValue
         } set {
-            store(newValue)
+            lock.lock()
+            storedValue = newValue
+            lock.unlock()
+
+            onChange?(newValue)
+
+            if let valueSubject {
+                DispatchQueue.main.async {
+                    valueSubject.send(newValue)
+                }
+            }
         }
     }
 
@@ -26,7 +36,7 @@ public final class StorageStream<Value: Sendable>: Sendable {
         defer { lock.unlock() }
         lock.lock()
 
-        nonisolated(unsafe) var valueSubject = self.valueSubject
+        var valueSubject = self.valueSubject
 
         if self.valueSubject == nil {
             valueSubject = .init()
@@ -43,28 +53,22 @@ public final class StorageStream<Value: Sendable>: Sendable {
         self.onChange = onChange
     }
 
+    @available(*, deprecated, message: "Directly set storage stream's value")
     nonisolated public func store(_ value: Value?) {
-        defer { lock.unlock() }
-        lock.lock()
-
-        storedValue = value
-        onChange?(value)
-
-        if let valueSubject {
-            DispatchQueue.main.async {
-                valueSubject.send(value)
-            }
-        }
+        self.value = value
     }
 }
 
+@available(macOS 10.15, *)
 extension StorageStream: Identifiable { }
+@available(macOS 10.15, *)
 extension StorageStream: Equatable {
     public static func == (lhs: StorageStream<Value>, rhs: StorageStream<Value>) -> Bool {
         lhs.id == rhs.id
     }
 }
 
+@available(macOS 10.15, *)
 extension StorageStream: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -75,7 +79,7 @@ extension StorageStream: Hashable {
 @available(iOS 17.0, *)
 @available(macOS 14.0, *)
 @Observable
-public class ObservableStorageStream<Value: Sendable>: @unchecked Sendable {
+public final class ObservableStorageStream<Value: Sendable>: @unchecked Sendable {
     @ObservationIgnored
     let onChange: (@Sendable (Value?) -> Void)?
     // Locking to prevent data race and achieve sendability

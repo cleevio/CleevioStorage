@@ -34,7 +34,7 @@ class UserDefaultsMock: UserDefaults, @unchecked Sendable {
     }
 }
 
-@available(iOS 17.0, *)
+@available(iOS 17.0, macOS 14.0, *)
 @Observable
 final class ObservableStorageTests: XCTestCase {
     static let storedKey = "test_key"

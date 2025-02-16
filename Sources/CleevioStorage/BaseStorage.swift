@@ -10,8 +10,15 @@ import CleevioCore
 
 @available(macOS 10.15, *)
 open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable {
+    struct StorageKey: Hashable {
+        let kind: Kind
+        let key: Key
+
+        enum Kind { case stream, observableStream }
+    }
+
     public let errorLogging: ErrorLogging?
-    nonisolated(unsafe) private var storages: [Key: WeakBox<AnyObject>] = [:]
+    nonisolated(unsafe) private var storages: [StorageKey: WeakBox<AnyObject>] = [:]
     private let lock = NSRecursiveLock()
 
     public init(errorLogging: ErrorLogging?) {
@@ -25,12 +32,14 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
             lock.unlock()
         }
 
+        let key = StorageKey(kind: .stream, key: key)
+
         if let storage = storages[key]?.unbox as? StorageStream<T> {
             return storage
         }
 
-        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key)) { [weak self] in
-            self?._store(value: $0, for: key)
+        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key.key)) { [weak self] in
+            self?._store(value: $0, for: key.key)
         }
 
         storages[key] = .init(storage)
@@ -47,12 +56,14 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
             lock.unlock()
         }
 
+        let key = StorageKey(kind: .observableStream, key: key)
+
         if let storage = storages[key]?.unbox as? ObservableStorageStream<T> {
             return storage
         }
 
-        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key)) { [weak self] in
-            self?._store(value: $0, for: key)
+        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key.key)) { [weak self] in
+            self?._store(value: $0, for: key.key)
         }
 
         storages[key] = .init(storage)
@@ -94,7 +105,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
 
         storages.forEach {
             let store = $0.value.unbox as? StorageStream<Sendable>
-            store?.store(nil)
+            store?.value = nil
         }
     }
 }

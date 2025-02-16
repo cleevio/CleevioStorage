@@ -101,7 +101,7 @@ struct StorageStreamTests {
         var isFirst = true
         for await value in publisher.values {
             if isFirst {
-                stream?.store(true)
+                stream?.value = true
                 isFirst = false
             } else {
                 #expect(value == true)
