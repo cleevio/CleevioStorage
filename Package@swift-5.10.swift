@@ -1,9 +1,16 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
-let swiftSettings: [SwiftSetting] = [ ]
+let swiftSettings: [SwiftSetting] = [
+// Only for development checks
+//    SwiftSetting.unsafeFlags([
+//        "-Xfrontend", "-strict-concurrency=complete",
+//        "-Xfrontend", "-warn-concurrency",
+//        "-Xfrontend", "-enable-actor-data-race-checks",
+//    ])
+]
 
 let package = Package(
     name: "CleevioStorageLibrary",
@@ -39,6 +46,5 @@ let package = Package(
             name: "CleevioStorageTests",
             dependencies: ["CleevioStorage", .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras")],
             swiftSettings: swiftSettings),
-    ],
-    swiftLanguageModes: [.v6]
+    ]
 )

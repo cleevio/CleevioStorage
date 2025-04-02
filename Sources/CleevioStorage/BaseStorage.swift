@@ -10,29 +10,38 @@ import CleevioCore
 
 @available(macOS 10.15, *)
 open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable {
+    struct StorageKey: Hashable {
+        let kind: Kind
+        let key: Key
+
+        enum Kind { case stream, observableStream }
+    }
+
     public let errorLogging: ErrorLogging?
-    var storages: [Key: WeakBox<AnyObject>] = [:]
+    nonisolated(unsafe) private var storages: [StorageKey: WeakBox<AnyObject>] = [:]
     private let lock = NSRecursiveLock()
 
     public init(errorLogging: ErrorLogging?) {
         self.errorLogging = errorLogging
     }
 
-    public final func stream<T: Codable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
+    public final func stream<T: Codable & Sendable>(for key: Key, type: T.Type = T.self) -> StorageStream<T> {
         lock.lock()
 
         defer {
             lock.unlock()
         }
 
+        let key = StorageKey(kind: .stream, key: key)
+
         if let storage = storages[key]?.unbox as? StorageStream<T> {
             return storage
         }
 
-        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key))
-        storage.onChange = { [weak self] in
-            self?._store(value: $0, for: key)
+        let storage: StorageStream<T> = StorageStream(currentValue: _initialValue(for: key.key)) { [weak self] in
+            self?._store(value: $0, for: key.key)
         }
+
         storages[key] = .init(storage)
 
 
@@ -40,35 +49,37 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
     }
 
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
-    public final func observableStream<T: Codable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
+    public final func observableStream<T: Codable & Sendable>(for key: Key, type: T.Type = T.self) -> ObservableStorageStream<T> {
         lock.lock()
 
         defer {
             lock.unlock()
         }
 
+        let key = StorageKey(kind: .observableStream, key: key)
+
         if let storage = storages[key]?.unbox as? ObservableStorageStream<T> {
             return storage
         }
 
-        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key))
-        storage.onChange = { [weak self] in
-            self?._store(value: $0, for: key)
+        let storage: ObservableStorageStream<T> = ObservableStorageStream(currentValue: _initialValue(for: key.key)) { [weak self] in
+            self?._store(value: $0, for: key.key)
         }
+
         storages[key] = .init(storage)
 
         return storage
     }
 
-    open func initialValue<T: Codable>(for key: Key) throws -> T? {
+    open func initialValue<T: Codable & Sendable>(for key: Key) throws -> T? {
         fatalError("initialValue(for:) has to be implemented")
     }
 
-    open func store<T: Codable>(value: T?, for key: Key) throws {
+    open func store<T: Codable & Sendable>(value: T?, for key: Key) throws {
         fatalError("store(for:type:) has to be implemented")
     }
 
-    private func _initialValue<T: Codable>(for key: Key) -> T? {
+    private func _initialValue<T: Codable & Sendable>(for key: Key) -> T? {
         do {
             return try initialValue(for: key)
         } catch {
@@ -77,7 +88,7 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         }
     }
 
-    private func _store<T: Codable>(value: T?, for key: Key) {
+    private func _store<T: Codable & Sendable>(value: T?, for key: Key) {
         do {
             try store(value: value, for: key)
         } catch {
@@ -93,8 +104,8 @@ open class BaseStorage<Key: KeyRepresentable>: StorageType, @unchecked Sendable 
         }
 
         storages.forEach {
-            let store = $0.value.unbox as? StorageStream<Any>
-            store?.store(nil)
+            let store = $0.value.unbox as? StorageStream<Sendable>
+            store?.value = nil
         }
     }
 }

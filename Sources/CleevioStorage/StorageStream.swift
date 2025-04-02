@@ -1,47 +1,74 @@
 
-import Combine
+@preconcurrency import Combine
 import Foundation
 import Observation
 import CleevioCore
 
 @available(macOS 10.15, *)
-open class StorageStream<Value>: @unchecked Sendable {
-    var onChange: ((Value?) -> Void)?
-
-    public private(set) lazy var id = ObjectIdentifier(self)
-    private let currentValueSubject: CurrentValueSubject<Value?, Never>
-
-    public var publisher: AnyPublisher<Value?, Never> {
-        let publisher = currentValueSubject.eraseToAnyPublisher()
-        setAssociatedObject(base: self, key: &id, value: self)
-        return publisher
-    }
+public final class StorageStream<Value: Sendable>: Sendable {
+    private let onChange: (@Sendable (Value?) -> Void)?
+    nonisolated(unsafe) private weak var valueSubject: PassthroughSubject<Value?, Never>?
+    private let lock = NSRecursiveLock()
+    nonisolated(unsafe) private var storedValue: Value?
+    nonisolated(unsafe) private(set) var associatedObjectID = UUID()
 
     public var value: Value? {
         get {
-            currentValueSubject.value
+            defer { lock.unlock() }
+            lock.lock()
+            return storedValue
         } set {
-            store(newValue)
+            lock.lock()
+            storedValue = newValue
+            lock.unlock()
+
+            onChange?(newValue)
+
+            if let valueSubject {
+                DispatchQueue.main.async {
+                    valueSubject.send(newValue)
+                }
+            }
         }
     }
 
-    required public init(currentValue: Value?) {
-        self.currentValueSubject = CurrentValueSubject(currentValue)
+    public var publisher: AnyPublisher<Value?, Never> {
+        defer { lock.unlock() }
+        lock.lock()
+
+        var valueSubject = self.valueSubject
+
+        if self.valueSubject == nil {
+            valueSubject = .init()
+            self.valueSubject = valueSubject
+        }
+
+        let publisher = Publishers.Merge(Just(storedValue).eraseToAnyPublisher(), valueSubject!.eraseToAnyPublisher()).eraseToAnyPublisher()
+        setAssociatedObject(base: valueSubject!, key: &associatedObjectID, value: self)
+        return publisher
     }
 
-    public func store(_ value: Value?) {
-        currentValueSubject.send(value)
-        onChange?(value)
+    required nonisolated public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
+        self.storedValue = currentValue
+        self.onChange = onChange
+    }
+
+    @available(*, deprecated, message: "Directly set storage stream's value")
+    nonisolated public func store(_ value: Value?) {
+        self.value = value
     }
 }
 
+@available(macOS 10.15, *)
 extension StorageStream: Identifiable { }
+@available(macOS 10.15, *)
 extension StorageStream: Equatable {
     public static func == (lhs: StorageStream<Value>, rhs: StorageStream<Value>) -> Bool {
         lhs.id == rhs.id
     }
 }
 
+@available(macOS 10.15, *)
 extension StorageStream: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -52,8 +79,9 @@ extension StorageStream: Hashable {
 @available(iOS 17.0, *)
 @available(macOS 14.0, *)
 @Observable
-public class ObservableStorageStream<Value>: @unchecked Sendable {
-    var onChange: ((Value?) -> Void)?
+public final class ObservableStorageStream<Value: Sendable>: @unchecked Sendable {
+    @ObservationIgnored
+    let onChange: (@Sendable (Value?) -> Void)?
     // Locking to prevent data race and achieve sendability
     @ObservationIgnored 
     private let lock = NSRecursiveLock()
@@ -72,7 +100,8 @@ public class ObservableStorageStream<Value>: @unchecked Sendable {
         }
     }
 
-    required public init(currentValue: Value?) {
-        self.value = currentValue
+    required public init(currentValue: Value?, onChange: (@Sendable (Value?) -> Void)? = nil) {
+        self.onChange = onChange
+        self.storedValue = currentValue
     }
 }
