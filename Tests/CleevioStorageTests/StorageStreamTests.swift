@@ -97,7 +97,10 @@ struct StorageStreamTests {
             publisher = newStream.publisher
         }
 
-        guard let publisher else { return }
+        guard let publisher else {
+            let a = Issue.record("Should not be nil.")
+        }
+
         var isFirst = true
         for await value in publisher.values {
             if isFirst {
