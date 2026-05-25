@@ -9,6 +9,7 @@ let package = Package(
     name: "CleevioStorageLibrary",
     platforms: [
         .iOS(.v13),
+        .macOS(.v10_15),
         .watchOS(.v6)
     ],
     products: [
