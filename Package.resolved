@@ -1,5 +1,5 @@
 {
-  "originHash" : "c363ee6ef8d42aa78193eb96c78dad95089cdedc561bcd9ec34e35706ff74e78",
+  "originHash" : "e30277487df781e72471af20d0a930354b3df9f52b6c2b093966ecf8251736e4",
   "pins" : [
     {
       "identity" : "cleeviocore",
@@ -13,10 +13,10 @@
     {
       "identity" : "keychainaccess",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
+      "location" : "https://github.com/parmar-mehul/KeychainAccess",
       "state" : {
-        "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
-        "version" : "4.2.2"
+        "revision" : "a2e6549aa3428441173c583afd9e63d0b90bfb71",
+        "version" : "1.0.2"
       }
     },
     {
